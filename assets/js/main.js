@@ -13,6 +13,8 @@ let nav = () =>{
                 break;
             case 'restart':
                 go('game', 'd-flex');
+                for(let child of $('.elements').querySelectorAll('.element'))
+                    child.remove();
                 break;
         }
     }

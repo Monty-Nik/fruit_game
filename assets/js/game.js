@@ -114,9 +114,12 @@ class Player extends Drawable {
         this.x = window.innerWidth / 2 - this.w / 2;
         this.y = window.innerHeight - this.h;
         this.speedPerFrame = 20;
+        this.skillTimer =0;
+        this.couldTimer = 0;
         this.keys={
             ArrowLeft: false,
             ArrowRight: false,
+            Space: false
         }
         this.createElement();
         this.bindKeyEvents();
@@ -133,7 +136,32 @@ class Player extends Drawable {
         if(this.keys.ArrowLeft && this.x > 0) this.offsets.x = -this.speedPerFrame;
         else if(this.keys.ArrowRight && this.x < window.innerWidth - this.w) this.offsets.x = this.speedPerFrame;
         else this.offsets.x = 0;
+        if(this.keys.Space &&  this.couldTimer === 0){
+            this.skillTimer++;
+            $('#skill').innerHTML = `осталось: ${Math.ceil((240 - this.skillTimer) / 60)}`;
+            this.applySkill();
+        }
+        if(this.skillTimer > 240 || (!this.keys.Space && this.skillTimer > 1)){
+            this.couldTimer++;
+            $('#skill').innerHTML = `осталось: ${Math.ceil((300 - this.couldTimer) / 60)}`;
+            this.keys.Space = false;
+        }
+        if(this.couldTimer > 300){
+            this.couldTimer = 0;
+            this.skillTimer = 0;
+            $('#skill').innerHTML = 'готово';
+        }
+
         super.update();
+    }
+    applySkill(){
+        for(let i = 1; i < this.game.elements.length; i++) {
+            if(this.game.elements[i].x < this.x + (this.w / 2)) {
+                this.game.elements[i].x += 15;
+            } else if(this.game.elements[i].x > this.x + (this.w / 2)) {
+                this.game.elements[i].x -= 15;
+            }
+        }
     }
 }
 
@@ -152,6 +180,9 @@ class Game {
             s1: 0,
             s2: 0
         };
+        this.ended = false;
+        this.pause = false;
+        this.keyEvents();
 
     }
 
@@ -165,17 +196,32 @@ class Game {
         return element;
     }
 
+    keyEvents(){
+        addEventListener('keydown', ev => {
+            if (ev.code === "Escape") this.pause = !this.pause;
+        })
+    }
+
     loop() {
         requestAnimationFrame(() => {
-            this.counterForTimer++;
-            if(this.counterForTimer % 60 === 0){
-                this.timer();
-                this.randomFruitGenerate();
+            if (!this.pause) {
+                this.counterForTimer++;
+                if (this.counterForTimer % 60 === 0) {
+                    this.timer();
+                    this.randomFruitGenerate();
+                }
                 // this.counterForTimer = 0;
+                if (this.hp < 0) {
+                    this.end();
+                }
+                $('.pause').style.display = 'none';
+                this.updateElements();
+                this.setParams();
+            } else if(this.pause){
+                $('.pause').style.display = 'flex';
+
             }
-            this.updateElements();
-            this.setParams();
-            this.loop();
+            if(!this.ended) this.loop();
         });
     }
 
@@ -225,6 +271,23 @@ class Game {
             time.m1++;
         }
         $('#timer').innerHTML = `${time.m1}${time.m2}:${time.s1}${time.s2}`;
+    }
+
+    end(){
+        this.ended = true;
+        let time = this.time;
+        if((time.s1 >= 1 || time.m2 >= 1 || time.m1 >= 1) && this.points >= 5){
+            $('#playerName').innerHTML = `Win, ${this.name}!`;
+            $('#endTime').innerHTML = `Ваше время: ${time.m1}${time.m2}:${time.s1}${time.s2}`;
+            $('#collectedFruits').innerHTML = `Вы собрали, ${this.points}`;
+            $('#congratulation').innerHTML = 'Вы ввыиграли'
+        } else {
+            $('#playerName').innerHTML = `No win, ${this.name}!`;
+            $('#endTime').innerHTML = `Жаль: ${time.m1}${time.m2}:${time.s1}${time.s2}`;
+            $('#collectedFruits').innerHTML = `Вы собрали, ${this.points}`;
+            $('#congratulation').innerHTML = 'Вы проиграли'
+        }
+        go('end', 'panel d-flex justify-content-center align-items-center');
     }
 
 }
