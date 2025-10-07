@@ -33,7 +33,9 @@ class Drawable {
         `;
     }
 
-
+    removeElement() {
+        this.element.remove();
+    }
 
     isCollision(element) {
         let a = {
@@ -64,9 +66,23 @@ class Fruit extends Drawable {
         this.createElement();
     }
     update() {
-        if(this.isCollision(this.game.player)) console.log("+ point ");
-        if(this.y > window.innerHeight) console.log("- hp");
+        if(this.isCollision(this.game.player)) this.takePoint();
+        if(this.y > window.innerHeight) this.takeDamage();
         super.update();
+    }
+
+    takePoint() {
+        if(this.game.remove(this)){
+            this.removeElement();
+            this.game.points++;
+        }
+    }
+
+    takeDamage() {
+        if(this.game.remove(this)) {
+            this.removeElement();
+            this.game.hp--;
+        }
     }
 }
 
@@ -128,6 +144,9 @@ class Game {
         this.player = this.generate(Player);
         this.counterForTimer = 0;
         this.fruits=[Apple,Banana, Orange];
+        this.hp = 4;
+        this.points = 0;
+
     }
 
     start () {
@@ -166,11 +185,20 @@ class Game {
     }
 
     setParams() {
-        let params = ['name'];
-        let values = [this.name];
+        let params = ['name', 'points', 'hp'];
+        let values = [this.name, this.points, this.hp];
         params.forEach((param, ind) => {
             $(`#${param}`).innerHTML = values[ind];
         });
+    }
+
+    remove(el){
+        let idx = this.elements.indexOf(el);
+        if(idx !== -1) {
+            this.elements.splice(idx, 1);
+            return true;
+        }
+        return false;
     }
 }
 
@@ -179,3 +207,4 @@ let random = (min, max) => {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
