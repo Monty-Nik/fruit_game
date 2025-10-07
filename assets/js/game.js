@@ -210,6 +210,7 @@ class Game {
                     this.timer();
                     this.randomFruitGenerate();
                 }
+
                 // this.counterForTimer = 0;
                 if (this.hp < 0) {
                     this.end();
@@ -218,7 +219,10 @@ class Game {
                 this.updateElements();
                 this.setParams();
             } else if(this.pause){
+
                 $('.pause').style.display = 'flex';
+
+
 
             }
             if(!this.ended) this.loop();
